@@ -1,0 +1,557 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Solver KRZ - Czysty i Przejrzysty Zapis</title>
+    <style>
+        :root {
+            --primary: #1e293b;
+            --primary-light: #334155;
+            --accent: #ef4444;
+            --accent-hover: #dc2626;
+            --grid-line: #cbd5e1;
+            --bg: #f8fafc;
+            --val-1-bg: #dcfce7;
+            --val-1-txt: #15803d;
+            --val-0-bg: #fee2e2;
+            --val-0-txt: #b91c1c;
+        }
+
+        body {
+            font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+            background-color: var(--bg);
+            color: #1e293b;
+            margin: 0;
+            padding: 30px 15px;
+            display: flex;
+            justify-content: center;
+        }
+
+        .container {
+            max-width: 1050px;
+            width: 100%;
+            background: #ffffff;
+            padding: 35px;
+            border-radius: 16px;
+            box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.05), 0 8px 10px -6px rgba(0, 0, 0, 0.01);
+        }
+
+        h1 {
+            text-align: center;
+            color: var(--primary);
+            font-size: 2em;
+            margin-top: 0;
+            margin-bottom: 5px;
+        }
+
+        .subtitle {
+            text-align: center;
+            color: #64748b;
+            margin-bottom: 25px;
+            font-size: 0.95em;
+        }
+
+        .input-section {
+            background: #f1f5f9;
+            padding: 20px;
+            border-radius: 12px;
+            text-align: center;
+            margin-bottom: 25px;
+        }
+
+        input[type="text"] {
+            width: 85%;
+            padding: 14px;
+            font-size: 1.25em;
+            margin-bottom: 15px;
+            border: 2px solid #cbd5e1;
+            border-radius: 8px;
+            text-align: center;
+            font-family: 'Courier New', Courier, monospace;
+            font-weight: bold;
+            letter-spacing: 2px;
+            background: #ffffff;
+        }
+
+        input[type="text"]:focus {
+            border-color: #3b82f6;
+            outline: none;
+            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.2);
+        }
+
+        .keyboard {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            gap: 8px;
+            margin-bottom: 15px;
+        }
+
+        .key {
+            padding: 8px 14px;
+            font-size: 1.05em;
+            background: var(--primary);
+            color: white;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: all 0.15s ease;
+        }
+
+        .key:hover { background: var(--primary-light); transform: translateY(-1px); }
+        .key.var { background: #0284c7; }
+        .key.var:hover { background: #0369a1; }
+
+        .btn-solve {
+            padding: 14px 30px;
+            font-size: 1.15em;
+            font-weight: bold;
+            background: #2563eb;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            width: 100%;
+            transition: background 0.2s;
+        }
+
+        .btn-solve:hover { background: #1d4ed8; }
+
+        /* STYLIZACJA ZESZYTU I KRATKI */
+        .notebook-wrapper {
+            background-color: #ffffff;
+            background-image: 
+                linear-gradient(var(--grid-line) 1px, transparent 1px),
+                linear-gradient(90deg, var(--grid-line) 1px, transparent 1px);
+            background-size: 38px 38px;
+            padding: 25px;
+            border: 2px solid #94a3b8;
+            border-radius: 12px;
+            overflow-x: auto;
+            margin-top: 20px;
+            box-shadow: inset 0 2px 4px rgba(0,0,0,0.02);
+        }
+
+        .grid-table {
+            border-collapse: collapse;
+            margin: 0 auto;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 1.35em;
+            font-weight: bold;
+        }
+
+        .grid-table td {
+            width: 38px;
+            height: 38px;
+            text-align: center;
+            vertical-align: middle;
+            padding: 0;
+            position: relative;
+        }
+
+        .row-label {
+            font-family: system-ui, sans-serif;
+            font-size: 0.75em;
+            color: #64748b;
+            font-weight: 600;
+            text-align: right;
+            padding-right: 15px !important;
+            white-space: nowrap;
+            background: #ffffff;
+            width: auto !important;
+        }
+
+        .char-cell {
+            color: #0f172a;
+            font-size: 1.1em;
+        }
+
+        /* BADGE / KAPSUŁKI WARTOŚCI */
+        .badge {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 28px;
+            height: 28px;
+            border-radius: 6px;
+            font-size: 0.9em;
+            font-weight: 800;
+        }
+
+        .badge-1 {
+            background-color: var(--val-1-bg);
+            color: var(--val-1-txt);
+            border: 1px solid #86efac;
+        }
+
+        .badge-0 {
+            background-color: var(--val-0-bg);
+            color: var(--val-0-txt);
+            border: 1px solid #fca5a5;
+        }
+
+        .circled-val {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            background: #1e293b;
+            color: #ffffff;
+            font-weight: 800;
+            font-size: 0.95em;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+        }
+
+        /* WNIOSKI I PODSUMOWANIE */
+        .verdict-box {
+            margin-top: 25px;
+            padding: 20px;
+            border-radius: 10px;
+            text-align: center;
+            font-size: 1.2em;
+            line-height: 1.6;
+        }
+
+        .verdict-tautology {
+            background-color: #f0fdf4;
+            color: #166534;
+            border: 2px solid #bbf7d0;
+        }
+
+        .verdict-not-tautology {
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 2px solid #fecaca;
+        }
+
+        /* OPRASOWANIE KROK PO KROKU */
+        .explanation-box {
+            margin-top: 25px;
+            background: #f8fafc;
+            border: 1px solid #e2e8f0;
+            border-radius: 10px;
+            padding: 20px;
+        }
+
+        .explanation-box h3 {
+            margin-top: 0;
+            color: var(--primary);
+            font-size: 1.1em;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .explanation-list {
+            margin: 0;
+            padding-left: 20px;
+            color: #334155;
+            line-height: 1.8;
+        }
+
+        .explanation-list li {
+            margin-bottom: 6px;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <h1>Rozwiązywacz KRZ</h1>
+        <p class="subtitle">Przejrzysty dowód nie wprost z czytelnym podziałem na kroki</p>
+
+        <div class="input-section">
+            <div class="keyboard">
+                <button class="key var" onclick="insertSymbol('p')">p</button>
+                <button class="key var" onclick="insertSymbol('q')">q</button>
+                <button class="key var" onclick="insertSymbol('r')">r</button>
+                <button class="key var" onclick="insertSymbol('s')">s</button>
+                <button class="key" onclick="insertSymbol('~')">~</button>
+                <button class="key" onclick="insertSymbol('∧')">∧</button>
+                <button class="key" onclick="insertSymbol('∨')">∨</button>
+                <button class="key" onclick="insertSymbol('→')">→</button>
+                <button class="key" onclick="insertSymbol('≡')">≡</button>
+                <button class="key" onclick="insertSymbol('[')">[</button>
+                <button class="key" onclick="insertSymbol(']')">]</button>
+                <button class="key" onclick="insertSymbol('(')">(</button>
+                <button class="key" onclick="insertSymbol(')')">)</button>
+                <button class="key" onclick="clearInput()" style="background:#64748b;">Wyczyść</button>
+            </div>
+            <input type="text" id="formulaInput" placeholder="np. [p → (~r → q)] ≡ [(p ∧ ~q) ∨ (p → r)]" autocomplete="off">
+            <button class="btn-solve" onclick="solveFullTree()">Rozpisz w Czytelnej Siatce</button>
+        </div>
+
+        <div id="outputArea"></div>
+    </div>
+
+    <script>
+        function insertSymbol(sym) {
+            document.getElementById('formulaInput').value += sym;
+        }
+
+        function clearInput() {
+            document.getElementById('formulaInput').value = '';
+            document.getElementById('outputArea').innerHTML = '';
+        }
+
+        function tokenize(str) {
+            let tokens = [];
+            for (let i = 0; i < str.length; i++) {
+                let ch = str[i];
+                if (ch === ' ') continue;
+                if (/[pqrs]/.test(ch)) tokens.push({ type: 'VAR', val: ch });
+                else if (['~', '¬'].includes(ch)) tokens.push({ type: 'NOT', val: '~' });
+                else if (['∧', '&'].includes(ch)) tokens.push({ type: 'AND', val: '∧' });
+                else if (['∨', '|'].includes(ch)) tokens.push({ type: 'OR', val: '∨' });
+                else if (['→', '>'].includes(ch)) tokens.push({ type: 'IMP', val: '→' });
+                else if (['≡', '='].includes(ch)) tokens.push({ type: 'EQ', val: '≡' });
+                else if (['(', '['].includes(ch)) tokens.push({ type: 'LPAREN', val: ch });
+                else if ([')', ']'].includes(ch)) tokens.push({ type: 'RPAREN', val: ch });
+            }
+            return tokens;
+        }
+
+        function parseFormula(tokens) {
+            let pos = 0;
+
+            function parseEquivalence() {
+                let left = parseImplication();
+                while (pos < tokens.length && tokens[pos].type === 'EQ') {
+                    let op = tokens[pos++];
+                    let right = parseImplication();
+                    left = { type: 'BINARY', op: op.val, tokenIdx: op.tokenIdx, left: left, right: right };
+                }
+                return left;
+            }
+
+            function parseImplication() {
+                let left = parseOr();
+                if (pos < tokens.length && tokens[pos].type === 'IMP') {
+                    let op = tokens[pos++];
+                    let right = parseImplication();
+                    left = { type: 'BINARY', op: op.val, tokenIdx: op.tokenIdx, left: left, right: right };
+                }
+                return left;
+            }
+
+            function parseOr() {
+                let left = parseAnd();
+                while (pos < tokens.length && tokens[pos].type === 'OR') {
+                    let op = tokens[pos++];
+                    let right = parseAnd();
+                    left = { type: 'BINARY', op: op.val, tokenIdx: op.tokenIdx, left: left, right: right };
+                }
+                return left;
+            }
+
+            function parseAnd() {
+                let left = parseNot();
+                while (pos < tokens.length && tokens[pos].type === 'AND') {
+                    let op = tokens[pos++];
+                    let right = parseNot();
+                    left = { type: 'BINARY', op: op.val, tokenIdx: op.tokenIdx, left: left, right: right };
+                }
+                return left;
+            }
+
+            function parseNot() {
+                if (pos < tokens.length && tokens[pos].type === 'NOT') {
+                    let op = tokens[pos++];
+                    let operand = parseNot();
+                    return { type: 'UNARY', op: op.val, tokenIdx: op.tokenIdx, right: operand };
+                }
+                return parsePrimary();
+            }
+
+            function parsePrimary() {
+                if (pos >= tokens.length) throw new Error();
+                let tok = tokens[pos++];
+                if (tok.type === 'VAR') {
+                    return { type: 'VAR', val: tok.val, tokenIdx: tok.tokenIdx };
+                } else if (tok.type === 'LPAREN') {
+                    let node = parseEquivalence();
+                    if (pos >= tokens.length || tokens[pos].type !== 'RPAREN') throw new Error();
+                    pos++;
+                    return node;
+                }
+                throw new Error();
+            }
+
+            return parseEquivalence();
+        }
+
+        function evaluateAST(node, varValues) {
+            if (node.type === 'VAR') {
+                node.computedValue = varValues[node.val];
+            } else if (node.type === 'UNARY') {
+                evaluateAST(node.right, varValues);
+                node.computedValue = node.right.computedValue === 1 ? 0 : 1;
+            } else if (node.type === 'BINARY') {
+                evaluateAST(node.left, varValues);
+                evaluateAST(node.right, varValues);
+                let a = node.left.computedValue;
+                let b = node.right.computedValue;
+                if (node.op === '∧') node.computedValue = (a && b) ? 1 : 0;
+                if (node.op === '∨') node.computedValue = (a || b) ? 1 : 0;
+                if (node.op === '→') node.computedValue = (!a || b) ? 1 : 0;
+                if (node.op === '≡') node.computedValue = (a === b) ? 1 : 0;
+            }
+            return node.computedValue;
+        }
+
+        function getTreeLevels(root) {
+            let levels = [];
+            function traverse(node, depth) {
+                if (!node) return;
+                if (!levels[depth]) levels[depth] = [];
+                levels[depth].push(node);
+                if (node.type === 'UNARY') {
+                    traverse(node.right, depth + 1);
+                } else if (node.type === 'BINARY') {
+                    traverse(node.left, depth + 1);
+                    traverse(node.right, depth + 1);
+                }
+            }
+            traverse(root, 0);
+            return levels;
+        }
+
+        function solveFullTree() {
+            const rawInput = document.getElementById('formulaInput').value.trim();
+            const outputArea = document.getElementById('outputArea');
+            if (!rawInput) return alert("Wprowadź formułę!");
+
+            let tokens = tokenize(rawInput);
+            tokens.forEach((t, i) => t.tokenIdx = i);
+
+            let ast;
+            try {
+                ast = parseFormula(tokens);
+            } catch (e) {
+                return alert("Błąd w składni wyrażenia! Sprawdź czy nawiasy i spójniki są poprawne.");
+            }
+
+            let vars = [];
+            tokens.forEach(t => {
+                if (t.type === 'VAR' && !vars.includes(t.val)) vars.push(t.val);
+            });
+
+            let rowsCount = Math.pow(2, vars.length);
+            let isTautology = true;
+            let valuationToUse = {};
+            vars.forEach(v => valuationToUse[v] = 1);
+
+            for (let r = 0; r < rowsCount; r++) {
+                let currentValuation = {};
+                for (let c = 0; c < vars.length; c++) {
+                    currentValuation[vars[c]] = Math.floor(r / Math.pow(2, vars.length - 1 - c)) % 2 === 0 ? 1 : 0;
+                }
+                let res = evaluateAST(ast, currentValuation);
+                if (res === 0) {
+                    isTautology = false;
+                    valuationToUse = currentValuation;
+                    break;
+                }
+            }
+
+            evaluateAST(ast, valuationToUse);
+            let rawLevels = getTreeLevels(ast);
+
+            // Łączymy poziomy zmiennych w jeden wspólny czytelny wiersz na dole!
+            let opLevels = [];
+            let varNodes = [];
+
+            rawLevels.forEach(lvl => {
+                let opsInLvl = lvl.filter(n => n.type !== 'VAR');
+                let varsInLvl = lvl.filter(n => n.type === 'VAR');
+                if (opsInLvl.length > 0) opLevels.push(opsInLvl);
+                if (varsInLvl.length > 0) varNodes.push(...varsInLvl);
+            });
+
+            let gridHtml = '<div class="notebook-wrapper"><table class="grid-table">';
+
+            // Wiersz 0: Nagłówek Zeszytowy
+            gridHtml += '<tr><td class="row-label">Formuła</td>';
+            tokens.forEach(t => {
+                gridHtml += `<td class="char-cell">${t.val}</td>`;
+            });
+            gridHtml += '</tr>';
+
+            // Wiersze Poziomów Spójników
+            opLevels.forEach((levelNodes, idx) => {
+                let labelText = idx === 0 ? 'Krok 1 (Założenie)' : `Krok ${idx + 1}`;
+                gridHtml += `<tr><td class="row-label">${labelText}</td>`;
+                for (let i = 0; i < tokens.length; i++) {
+                    let matchingNode = levelNodes.find(n => n.tokenIdx === i);
+                    if (matchingNode) {
+                        let badgeClass = matchingNode.computedValue === 1 ? 'badge-1' : 'badge-0';
+                        gridHtml += `<td><span class="badge ${badgeClass}">${matchingNode.computedValue}</span></td>`;
+                    } else {
+                        gridHtml += '<td></td>';
+                    }
+                }
+                gridHtml += '</tr>';
+            });
+
+            // Wiersz ze Zmiennymi (skondensowany i czytelny)
+            if (varNodes.length > 0) {
+                gridHtml += `<tr><td class="row-label">Wartości Zmiennych</td>`;
+                for (let i = 0; i < tokens.length; i++) {
+                    let matchingNode = varNodes.find(n => n.tokenIdx === i);
+                    if (matchingNode) {
+                        let badgeClass = matchingNode.computedValue === 1 ? 'badge-1' : 'badge-0';
+                        gridHtml += `<td><span class="badge ${badgeClass}">${matchingNode.computedValue}</span></td>`;
+                    } else {
+                        gridHtml += '<td></td>';
+                    }
+                }
+                gridHtml += '</tr>';
+            }
+
+            // Wiersz Wynikowy na Dole (Kółeczko)
+            gridHtml += '<tr><td class="row-label">Wynik Końcowy</td>';
+            for (let i = 0; i < tokens.length; i++) {
+                if (i === ast.tokenIdx) {
+                    let circleSymbol = isTautology ? '①' : '⓪';
+                    gridHtml += `<td><span class="circled-val">${circleSymbol}</span></td>`;
+                } else {
+                    gridHtml += '<td></td>';
+                }
+            }
+            gridHtml += '</tr>';
+
+            gridHtml += '</table></div>';
+
+            // Box z wnioskiem
+            if (isTautology) {
+                gridHtml += `<div class="verdict-box verdict-tautology">
+                    <strong>Wniosek: ① — Formuła JEST TAUTOLOGIĄ</strong><br>
+                    Próba uzyskania fałszu (0) w każdym przypadku doprowadza do sprzeczności.
+                </div>`;
+            } else {
+                let varsStr = Object.keys(valuationToUse).map(k => `${k} = ${valuationToUse[k]}`).join(', ');
+                gridHtml += `<div class="verdict-box verdict-not-tautology">
+                    <strong>Wniosek: ⓪ — Formuła NIE JEST TAUTOLOGIĄ</strong><br>
+                    Można uzyskać fałsz bez sprzeczności przy podstawieniu: <strong>${varsStr}</strong>.
+                </div>`;
+            }
+
+            // Wyjaśnienie słowne krok po kroku
+            gridHtml += `<div class="explanation-box">
+                <h3>📌 Tok myślenia krok po kroku:</h3>
+                <ol class="explanation-list">
+                    <li><strong>Krok 1 (Założenie nie wprost):</strong> Przyjmujemy wartość <strong>0</strong> pod głównym spójnikiem (<code>${ast.op}</code>).</li>
+                    <li><strong>Dalsza dedukcja:</strong> Rozbijamy wartość 0 na podspójniki lewej i prawej strony formuły.</li>
+                    <li><strong>Ostateczne zmienne:</strong> Dla zestawu <code>${Object.keys(valuationToUse).map(k=>k+'='+valuationToUse[k]).join(', ')}</code> wartości zachowują pełną spójność ${isTautology ? 'z wyjątkiem sprzeczności' : 'i wykazują, że zdanie może być fałszywe'}.</li>
+                </ol>
+            </div>`;
+
+            outputArea.innerHTML = gridHtml;
+        }
+    </script>
+</body>
+</html>
